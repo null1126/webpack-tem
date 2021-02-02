@@ -3,17 +3,21 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 // 删除已存在的打包文件
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-// 压缩css
+// 将css单独打包成一个文件的插件，它为每个包含css的js文件都创建一个css文件。它支持css和sourceMaps的按需加载。
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-// const OptimizeCssAssetsWebpackPlugin = requier('optimize-css-assets-webpack-plugin')
+// 压缩css 
+const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
 // 压缩js
 const TerserWebpackPlugin = require('terser-webpack-plugin')
 // 分析包大小
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports  = {
+    // 模式
     mode: 'development',
+    // 打包入口
     entry: './src/main.js',
+    // 打包出口
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist')
@@ -42,6 +46,7 @@ module.exports  = {
     },
     module: {
         rules: [
+            // 解析css
             {
                 test: /\.css$/,
                 use: [
@@ -49,6 +54,7 @@ module.exports  = {
                     'css-loader'
                 ]
             },
+            // 解析less
             {
                 test: /\.less$/,
                 // 由于版本原因安装最新版会解析报错 建议使用 npm install less-loader@4.1.0 --save-dev 安装
@@ -58,6 +64,7 @@ module.exports  = {
                     'less-loader'
                 ]
             },
+            // 解析js
             {
                 test: /\.js$/,
                 use: {
@@ -65,8 +72,9 @@ module.exports  = {
                 },
                 exclude: '/node_modules/'
             },
+            // 解析图片
             {
-                test: /\.(png|jpg|jpeg|gif|bmp)$/,
+                test: /\.(png|jpg|jpeg|gif|bmp|svg)$/,
                 use: [
                     {
                         loader: 'url-loader',
@@ -84,27 +92,28 @@ module.exports  = {
                     //     loader: 'image-webpack-loader',
                     //     options: {
                     //         mozjpeg: {
-                    //         progressive: true,
+                    //             progressive: true,
                     //         },
                     //         // optipng.enabled: false will disable optipng
                     //         optipng: {
-                    //         enabled: false,
+                    //             enabled: false,
                     //         },
                     //         pngquant: {
-                    //         quality: [0.65, 0.90],
-                    //         speed: 4
+                    //             quality: [0.65, 0.90],
+                    //             speed: 4
                     //         },
                     //         gifsicle: {
-                    //         interlaced: false,
+                    //             interlaced: false,
                     //         },
                     //         // the webp option will enable WEBP
                     //         webp: {
-                    //         quality: 75
+                    //             quality: 75
                     //         }
                     //     }
-                    // }
+                    // },
                 ]
             },
+            // 解析音视频
             {
                 test: /\.(mp4|ogg|mp3|wav)$/,
                 use: {
@@ -125,13 +134,18 @@ module.exports  = {
     plugins: [
         // 删除前一个打包文件
         new CleanWebpackPlugin(),
-        // new OptimizeCssAssetsWebpackPlugin(),
+        // 压缩css
+        new OptimizeCssAssetsWebpackPlugin({ // 配置  optimize-css-assets-webpack-plugin
+            assetNameRegExp: /\.css$/g,
+            cssProcessor: require("cssnano"), // 如果报错 安装 cnpm i cssnano -D
+        }),
         // 压缩css
         new MiniCssExtractPlugin({
             filename: 'css/[name].css'
         }),
         // 分析包大小
-        // new BundleAnalyzerPlugin(),
+        new BundleAnalyzerPlugin(),
+        // 添加html
         new HtmlWebpackPlugin({
             template: './public/index.html',
             filename: 'index.html',
