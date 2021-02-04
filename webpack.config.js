@@ -11,20 +11,22 @@ const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plug
 const TerserWebpackPlugin = require('terser-webpack-plugin')
 // 分析包大小
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+const { VueLoaderPlugin } = require('vue-loader/dist/index')
 
 module.exports  = {
     // 模式
     mode: 'development',
     // 打包入口
-    entry: './src/main.js',
+    entry: './src/main.ts',
     // 打包出口
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist')
     },
     resolve: {
+        extensions: ['.js', '.ts', '.css', '.less', '.vue'],
         alias: {
-            '@': path.join(__dirname, './src') // 这样@符号就表示项目根目录中src这一层路径
+            '@': path.join(__dirname, '.', 'src') // 这样@符号就表示项目根目录中src这一层路径
         }
     },
     // 由于版本问题安装最新的包会报错  建议使用 npm i webpack@4.43.0 webpack-cli@3.3.12 webpack-dev-server@3.11.0 webpack-dev-server -D 安装成套插件
@@ -72,6 +74,19 @@ module.exports  = {
                 },
                 exclude: '/node_modules/'
             },
+            // 解析ts
+            {
+                test: /\.ts$/,
+                use: [
+                    {
+                        loader: 'ts-loader', 
+                        // 解析vue里的ts
+                        options: {
+                            appendTsSuffixTo: [/\.vue$/]
+                        }
+                    }
+                ]
+            },
             // 解析图片
             {
                 test: /\.(png|jpg|jpeg|gif|bmp|svg)$/,
@@ -88,7 +103,7 @@ module.exports  = {
                             }
                         }
                     },
-                    // {
+                    // { // lj插件 居然用不起
                     //     loader: 'image-webpack-loader',
                     //     options: {
                     //         mozjpeg: {
@@ -128,10 +143,18 @@ module.exports  = {
                         }
                     }
                 }
+            },
+            // 解析vue
+            {
+                test: /\.vue$/,
+                use: [
+                    'vue-loader'
+                ]
             }
         ]
     },
     plugins: [
+        new VueLoaderPlugin(),
         // 删除前一个打包文件
         new CleanWebpackPlugin(),
         // 压缩css
